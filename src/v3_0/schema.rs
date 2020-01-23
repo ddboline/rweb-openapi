@@ -1,29 +1,14 @@
 //! Schema specification for [OpenAPI 3.0.0](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md)
 
-use semver;
+use crate::{
+    v3_0::components::{Components, ObjectOrReference},
+    Str,
+};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::BTreeMap;
 use url;
 use url_serde;
-
-use crate::{
-    v3_0::components::{Components, ObjectOrReference},
-    Error, Result, Str, MINIMUM_OPENAPI30_VERSION,
-};
-
-impl Spec {
-    pub fn validate_version(&self) -> Result<semver::Version> {
-        let spec_version = &self.openapi;
-        let sem_ver = semver::Version::parse(spec_version)?;
-        let required_version = semver::VersionReq::parse(MINIMUM_OPENAPI30_VERSION).unwrap();
-        if required_version.matches(&sem_ver) {
-            Ok(sem_ver)
-        } else {
-            Err(Error::UnsupportedSpecFileVersion(sem_ver))?
-        }
-    }
-}
 
 /// top level document
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
