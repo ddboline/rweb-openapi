@@ -29,13 +29,14 @@
 //! shape and behavior should be consistent and familiar to existing
 //! error_chain users.
 //!
+pub use error::Error;
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::Read, path::Path, result::Result as StdResult};
+use std::{borrow::Cow, fs::File, io::Read, path::Path, result::Result as StdResult};
 
 pub mod error;
 pub mod v3_0;
 
-pub use error::Error;
+pub type Str = Cow<'static, str>;
 
 const MINIMUM_OPENAPI30_VERSION: &str = ">= 3.0";
 
@@ -90,11 +91,8 @@ mod tests {
     };
 
     /// Helper function to write string to file.
-    fn write_to_file<P>(
-        path: P,
-        filename: &str,
-        data: &str,
-    ) where
+    fn write_to_file<P>(path: P, filename: &str, data: &str)
+    where
         P: AsRef<Path> + std::fmt::Debug,
     {
         println!("    Saving string to {:?}...", path);
@@ -163,41 +161,6 @@ mod tests {
 
         // Return the JSON filename and the two JSON strings
         (api_filename, parsed_spec_json_str, spec_json_str)
-    }
-
-    // Just tests if the deserialization does not blow up. But does not test correctness
-    #[test]
-    fn can_deserialize() {
-        for entry in fs::read_dir("data/v2").unwrap() {
-            let path = entry.unwrap().path();
-            // cargo test -- --nocapture to see this message
-            println!("Testing if {:?} is deserializable", path);
-            from_path(path).unwrap();
-        }
-    }
-
-    #[test]
-    fn can_deserialize_and_reserialize_v2() {
-        let save_path_base: std::path::PathBuf =
-            ["target", "tests", "can_deserialize_and_reserialize_v2"]
-                .iter()
-                .collect();
-
-        for entry in fs::read_dir("data/v2").unwrap() {
-            let path = entry.unwrap().path();
-
-            println!("Testing if {:?} is deserializable", path);
-
-            let (api_filename, parsed_spec_json_str, spec_json_str) =
-                compare_spec_through_json(&path, &save_path_base);
-
-            assert_eq!(
-                parsed_spec_json_str.lines().collect::<Vec<_>>(),
-                spec_json_str.lines().collect::<Vec<_>>(),
-                "contents did not match for api {}",
-                api_filename
-            );
-        }
     }
 
     #[test]

@@ -9,7 +9,7 @@ use url_serde;
 
 use crate::{
     v3_0::components::{Components, ObjectOrReference},
-    Error, Result, MINIMUM_OPENAPI30_VERSION,
+    Error, Result, Str, MINIMUM_OPENAPI30_VERSION,
 };
 
 impl Spec {
@@ -36,7 +36,7 @@ pub struct Spec {
     /// the API
     /// [`info.version`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#infoVersion)
     /// string.
-    pub openapi: String,
+    pub openapi: Str,
     /// Provides metadata about the API. The metadata MAY be used by tooling as required.
     pub info: Info,
     /// An array of Server Objects, which provide connectivity information to a target server.
@@ -55,7 +55,7 @@ pub struct Spec {
     /// [`Server Object`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#serverObject)
     /// in order to construct the full URL. The Paths MAY be empty, due to
     /// [ACL constraints](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#securityFiltering).
-    pub paths: BTreeMap<String, PathItem>,
+    pub paths: BTreeMap<Str, PathItem>,
 
     /// An element to hold various schemas for the specification.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -91,17 +91,17 @@ pub struct Spec {
 // #[serde(rename_all = "lowercase")]
 pub struct Info {
     /// The title of the application.
-    pub title: String,
+    pub title: Str,
     /// A short description of the application. CommonMark syntax MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     /// A URL to the Terms of Service for the API. MUST be in the format of a URL.
     #[serde(rename = "termsOfService", skip_serializing_if = "Option::is_none")]
     pub terms_of_service: Option<Url>,
     /// The version of the OpenAPI document (which is distinct from the [OpenAPI Specification
     /// version](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oasVersion)
     /// or the API implementation version).
-    pub version: String,
+    pub version: Str,
     /// The contact information for the exposed API.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub contact: Option<Contact>,
@@ -125,15 +125,15 @@ impl Url {
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#contactObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Contact {
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub name: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub name: Str,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<Url>,
 
     // TODO: Make sure the email is a valid email
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub email: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub email: Str,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions
 }
 
@@ -143,7 +143,7 @@ pub struct Contact {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct License {
     /// The license name used for the API.
-    pub name: String,
+    pub name: Str,
     /// A URL to the license used for the API.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<Url>,
@@ -159,14 +159,14 @@ pub struct Server {
     /// indicate that the host location is relative to the location where the OpenAPI document
     /// is being served. Variable substitutions will be made when a variable is named
     /// in {brackets}.
-    pub url: String,
+    pub url: Str,
     /// An optional string describing the host designated by the URL. CommonMark syntax MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     /// A map between a variable name and its value. The value is used for substitution in
     /// the server's URL template.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub variables: BTreeMap<String, ServerVariable>,
+    pub variables: BTreeMap<Str, ServerVariable>,
 }
 
 /// An object representing a Server Variable for server URL template substitution.
@@ -176,7 +176,7 @@ pub struct Server {
 pub struct ServerVariable {
     /// The default value to use for substitution, and to send, if an alternate value is not
     /// supplied. Unlike the Schema Object's default, this value MUST be provided by the consumer.
-    pub default: String,
+    pub default: Str,
     /// An enumeration of string values to be used if the substitution options are from a limited
     /// set.
     #[serde(rename = "enum", skip_serializing_if = "Vec::is_empty")]
@@ -185,8 +185,8 @@ pub struct ServerVariable {
     /// text representation.
     ///
     /// [CommonMark]: https://spec.commonmark.org/
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
 }
 
 /// Describes the operations available on a single path.
@@ -203,16 +203,16 @@ pub struct PathItem {
     /// If there are conflicts between the referenced definition and this Path Item's definition,
     /// the behavior is undefined.
     // FIXME: Should this ref be moved to an enum?
-    #[serde(skip_serializing_if = "String::is_empty", rename = "$ref")]
-    pub reference: String,
+    #[serde(skip_serializing_if = "str::is_empty", rename = "$ref")]
+    pub reference: Str,
 
     /// An optional, string summary, intended to apply to all operations in this path.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub summary: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub summary: Str,
     /// An optional, string description, intended to apply to all operations in this path.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
 
     /// A definition of a GET operation on this path.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -270,20 +270,20 @@ pub struct Operation {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
     /// A short summary of what the operation does.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub summary: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub summary: Str,
     /// A verbose explanation of the operation behavior.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     /// Additional external documentation for this operation.
     #[serde(skip_serializing_if = "Option::is_none", rename = "externalDocs")]
     pub external_docs: Option<ExternalDoc>,
     /// Unique string used to identify the operation. The id MUST be unique among all operations
     /// described in the API. Tools and libraries MAY use the operationId to uniquely identify an
     /// operation, therefore, it is RECOMMENDED to follow common programming naming conventions.
-    #[serde(skip_serializing_if = "String::is_empty", rename = "operationId")]
-    pub operation_id: String,
+    #[serde(skip_serializing_if = "str::is_empty", rename = "operationId")]
+    pub operation_id: Str,
 
     /// A list of parameters that are applicable for this operation. If a parameter is already
     /// defined at the
@@ -320,7 +320,7 @@ pub struct Operation {
     /// response for a successful operation call.
     ///
     /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#responsesObject>.
-    pub responses: BTreeMap<String, Response>,
+    pub responses: BTreeMap<Str, Response>,
 
     /// A map of possible out-of band callbacks related to the parent operation. The key is
     /// a unique identifier for the Callback Object. Each value in the map is a
@@ -330,7 +330,7 @@ pub struct Operation {
     /// an expression, evaluated at runtime, that identifies a URL to use for the
     /// callback operation.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub callbacks: BTreeMap<String, Callback>,
+    pub callbacks: BTreeMap<Str, Callback>,
 
     /// Declares this operation to be deprecated. Consumers SHOULD refrain from usage
     /// of the declared operation. Default value is `false`.
@@ -362,11 +362,11 @@ pub struct Operation {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Parameter {
     /// The name of the parameter.
-    pub name: String,
+    pub name: Str,
     /// values depend on parameter type
     /// may be `header`, `query`, 'path`, `formData`
     #[serde(rename = "in")]
-    pub location: String,
+    pub location: Str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -375,15 +375,15 @@ pub struct Parameter {
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
     /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
-    pub param_type: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub format: String,
+    pub param_type: Str,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub format: Str,
     /// A brief description of the parameter. This could contain examples
     /// of use.  GitHub Flavored Markdown is allowed.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     // collectionFormat: ???
     // default: ???
     // maximum ?
@@ -407,7 +407,7 @@ pub struct Parameter {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-enum ParameterStyle {
+pub enum ParameterStyle {
     Form,
     Simple,
 }
@@ -427,19 +427,19 @@ enum ParameterStyle {
 pub struct Schema {
     /// [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
     /// path to another definition
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "$ref")]
-    pub ref_path: String,
+    pub ref_path: Str,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
-    pub schema_type: String,
+    pub schema_type: Str,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub format: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub format: Str,
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(rename = "enum")]
@@ -452,7 +452,7 @@ pub struct Schema {
     pub items: Option<Box<Schema>>,
 
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub properties: BTreeMap<String, Schema>,
+    pub properties: BTreeMap<Str, Schema>,
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "readOnly")]
     pub read_only: Option<bool>,
@@ -467,8 +467,8 @@ pub struct Schema {
     ///
     /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#properties>.
     #[serde(
-    skip_serializing_if = "Option::is_none",
-    rename = "additionalProperties"
+        skip_serializing_if = "Option::is_none",
+        rename = "additionalProperties"
     )]
     pub additional_properties: Option<ObjectOrReference<Box<Schema>>>,
 
@@ -482,8 +482,8 @@ pub struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub example: Option<serde_json::value::Value>,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub title: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub title: Str,
 
     // The following properties are taken directly from the JSON Schema definition and
     // follow the same specifications:
@@ -540,27 +540,27 @@ pub struct Schema {
 pub struct Response {
     /// A short description of the response.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    pub description: String,
+    pub description: Str,
 
     /// Maps a header name to its definition.
     /// [RFC7230](https://tools.ietf.org/html/rfc7230#page-22) states header names are case
     /// insensitive. If a response header is defined with the name `"Content-Type"`, it SHALL
     /// be ignored.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub headers: BTreeMap<String, ObjectOrReference<Header>>,
+    pub headers: BTreeMap<Str, ObjectOrReference<Header>>,
 
     /// A map containing descriptions of potential response payloads. The key is a media type
     /// or [media type range](https://tools.ietf.org/html/rfc7231#appendix-D) and the value
     /// describes it. For responses that match multiple keys, only the most specific key is
     /// applicable. e.g. text/plain overrides text/*
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub content: BTreeMap<String, MediaType>,
+    pub content: BTreeMap<Str, MediaType>,
 
     /// A map of operations links that can be followed from the response. The key of the map
     /// is a short name for the link, following the naming constraints of the names for
     /// [Component Objects](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject).
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub links: BTreeMap<String, ObjectOrReference<Link>>,
+    pub links: BTreeMap<Str, ObjectOrReference<Link>>,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }
 
@@ -585,15 +585,15 @@ pub struct Header {
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
     /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
-    pub param_type: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub format: String,
+    pub param_type: Str,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub format: Str,
     /// A brief description of the parameter. This could contain examples
     /// of use.  GitHub Flavored Markdown is allowed.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     // collectionFormat: ???
     // default: ???
     // maximum ?
@@ -617,14 +617,14 @@ pub struct Header {
 pub struct RequestBody {
     /// A brief description of the request body. This could contain examples of use.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
 
     /// The content of the request body. The key is a media type or
     /// [media type range](https://tools.ietf.org/html/rfc7231#appendix-D) and the
     /// value describes it. For requests that match multiple keys, only the most specific key
     /// is applicable. e.g. text/plain overrides text/*
-    pub content: BTreeMap<String, MediaType>,
+    pub content: BTreeMap<Str, MediaType>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
@@ -656,7 +656,7 @@ pub enum Link {
     /// in the OpenAPI definition.
     Ref {
         #[serde(rename = "operationRef")]
-        operation_ref: String,
+        operation_ref: Str,
 
         // FIXME: Implement
         // /// A map representing parameters to pass to an operation as specified with `operationId`
@@ -666,9 +666,9 @@ pub enum Link {
         // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
         // /// `[{in}.]{name}` for operations that use the same parameter name in different
         // /// locations (e.g. path.id).
-        // parameters: BTreeMap<String, Any | {expression}>,
+        // parameters: BTreeMap<Str, Any | {expression}>,
         #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-        parameters: BTreeMap<String, String>,
+        parameters: BTreeMap<Str, String>,
 
         // FIXME: Implement
         // /// A literal value or
@@ -678,8 +678,8 @@ pub enum Link {
         // request_body: Any | {expression}
         /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
         /// used for rich text representation.
-        #[serde(skip_serializing_if = "String::is_empty")]
-        description: String,
+        #[serde(skip_serializing_if = "str::is_empty")]
+        description: Str,
 
         /// A server object to be used by the target operation.
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -690,7 +690,7 @@ pub enum Link {
     /// `operationId`. This field is mutually exclusive of the `operationRef` field.
     Id {
         #[serde(rename = "operationId")]
-        operation_id: String,
+        operation_id: Str,
 
         // FIXME: Implement
         // /// A map representing parameters to pass to an operation as specified with `operationId`
@@ -700,9 +700,9 @@ pub enum Link {
         // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
         // /// `[{in}.]{name}` for operations that use the same parameter name in different
         // /// locations (e.g. path.id).
-        // parameters: BTreeMap<String, Any | {expression}>,
+        // parameters: BTreeMap<Str, Any | {expression}>,
         #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-        parameters: BTreeMap<String, String>,
+        parameters: BTreeMap<Str, String>,
 
         // FIXME: Implement
         // /// A literal value or
@@ -712,8 +712,8 @@ pub enum Link {
         // request_body: Any | {expression}
         /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
         /// used for rich text representation.
-        #[serde(skip_serializing_if = "String::is_empty")]
-        description: String,
+        #[serde(skip_serializing_if = "str::is_empty")]
+        description: Str,
 
         /// A server object to be used by the target operation.
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -740,7 +740,7 @@ pub struct MediaType {
     /// only apply to `requestBody` objects when the media type is `multipart`
     /// or `application/x-www-form-urlencoded`.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub encoding: BTreeMap<String, Encoding>,
+    pub encoding: BTreeMap<Str, Encoding>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -756,7 +756,7 @@ pub enum MediaTypeExample {
     /// the `example` field. Furthermore, if referencing a `schema` which contains an
     /// example, the `examples` value SHALL override the example provided by the schema.
     Examples {
-        examples: BTreeMap<String, ObjectOrReference<Example>>,
+        examples: BTreeMap<Str, ObjectOrReference<Example>>,
     },
 }
 
@@ -769,15 +769,15 @@ pub struct Encoding {
     /// for `array` – the default is defined based on the inner type. The value can be a
     /// specific media type (e.g. `application/json`), a wildcard media type
     /// (e.g. `image/*`), or a comma-separated list of the two types.
-    #[serde(skip_serializing_if = "String::is_empty", rename = "contentType")]
-    pub content_type: String,
+    #[serde(skip_serializing_if = "str::is_empty", rename = "contentType")]
+    pub content_type: Str,
 
     /// A map allowing additional information to be provided as headers, for example
     /// `Content-Disposition`.  `Content-Type` is described separately and SHALL be
     /// ignored in this section. This property SHALL be ignored if the request body
     /// media type is not a `multipart`.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub headers: BTreeMap<String, ObjectOrReference<Header>>,
+    pub headers: BTreeMap<Str, ObjectOrReference<Header>>,
 
     /// Describes how a specific property value will be serialized depending on its type.
     /// See [Parameter Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterObject)
@@ -786,8 +786,8 @@ pub struct Encoding {
     /// property. The behavior follows the same values as `query` parameters, including
     /// default values. This property SHALL be ignored if the request body media type
     /// is not `application/x-www-form-urlencoded`.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub style: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub style: Str,
 
     /// When this is true, property values of type `array` or `object` generate
     /// separate parameters for each value of the array, or key-value-pair of the map.
@@ -812,13 +812,13 @@ pub struct Encoding {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Example {
     /// Short description for the example.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub summary: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub summary: Str,
 
     /// Long description for the example.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     // FIXME: Implement (merge with externalValue as enum)
     /// Embedded literal example. The `value` field and `externalValue` field are mutually
     /// exclusive. To represent examples of media types that cannot naturally represented
@@ -830,7 +830,7 @@ pub struct Example {
     // /// examples that cannot easily be included in JSON or YAML documents. The `value` field
     // /// and `externalValue` field are mutually exclusive.
     // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub externalValue: String,
+    // pub externalValue: Str,
 
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }
@@ -847,22 +847,22 @@ pub struct Example {
 pub enum SecurityScheme {
     #[serde(rename = "apiKey")]
     ApiKey {
-        name: String,
+        name: Str,
         #[serde(rename = "in")]
-        location: String,
+        location: Str,
     },
     #[serde(rename = "http")]
     Http {
-        scheme: String,
+        scheme: Str,
         #[serde(rename = "bearerFormat")]
-        bearer_format: String,
+        bearer_format: Str,
     },
     #[serde(rename = "oauth2")]
     OAuth2 { flows: Flows },
     #[serde(rename = "openIdConnect")]
     OpenIdConnect {
         #[serde(rename = "openIdConnectUrl")]
-        open_id_connect_url: String,
+        open_id_connect_url: Str,
     },
 }
 
@@ -891,7 +891,7 @@ pub struct ImplicitFlow {
     pub authorization_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<String, String>,
+    pub scopes: BTreeMap<Str, String>,
 }
 
 /// Configuration details for a password OAuth Flow
@@ -903,7 +903,7 @@ pub struct PasswordFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<String, String>,
+    pub scopes: BTreeMap<Str, String>,
 }
 
 /// Configuration details for a client credentials OAuth Flow
@@ -915,7 +915,7 @@ pub struct ClientCredentialsFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<String, String>,
+    pub scopes: BTreeMap<Str, String>,
 }
 
 /// Configuration details for a authorization code OAuth Flow
@@ -928,7 +928,7 @@ pub struct AuthorizationCodeFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<String, String>,
+    pub scopes: BTreeMap<Str, String>,
 }
 
 // TODO: Implement
@@ -960,12 +960,12 @@ pub struct Callback(
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Tag {
     /// The name of the tag.
-    pub name: String,
+    pub name: Str,
 
     /// A short description for the tag.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     // /// Additional external documentation for this tag.
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub external_docs: Option<Vec<ExternalDoc>>,
@@ -983,8 +983,8 @@ pub struct ExternalDoc {
 
     /// A short description of the target documentation.
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub description: Str,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }
 
