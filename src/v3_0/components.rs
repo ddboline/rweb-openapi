@@ -23,39 +23,39 @@ pub enum ObjectOrReference<T> {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Components {
     /// An object to hold reusable Schema Objects.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub schemas: Option<BTreeMap<String, ObjectOrReference<Schema>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub schemas: BTreeMap<String, ObjectOrReference<Schema>>,
 
     /// An object to hold reusable Response Objects.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub responses: Option<BTreeMap<String, ObjectOrReference<Response>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub responses: BTreeMap<String, ObjectOrReference<Response>>,
 
     /// An object to hold reusable Parameter Objects.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameters: Option<BTreeMap<String, ObjectOrReference<Parameter>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub parameters: BTreeMap<String, ObjectOrReference<Parameter>>,
 
     /// An object to hold reusable Example
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub examples: Option<BTreeMap<String, ObjectOrReference<Example>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub examples: BTreeMap<String, ObjectOrReference<Example>>,
 
     /// An object to hold reusable Request Body Objects.
-    #[serde(skip_serializing_if = "Option::is_none", rename = "requestBodies")]
-    pub request_bodies: Option<BTreeMap<String, ObjectOrReference<RequestBody>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty", rename = "requestBodies")]
+    pub request_bodies: BTreeMap<String, ObjectOrReference<RequestBody>>,
 
     /// An object to hold reusable Header Objects.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub headers: Option<BTreeMap<String, ObjectOrReference<Header>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub headers: BTreeMap<String, ObjectOrReference<Header>>,
 
     /// An object to hold reusable Security Scheme Objects.
-    #[serde(skip_serializing_if = "Option::is_none", rename = "securitySchemes")]
-    pub security_schemes: Option<BTreeMap<String, ObjectOrReference<SecurityScheme>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty", rename = "securitySchemes")]
+    pub security_schemes: BTreeMap<String, ObjectOrReference<SecurityScheme>>,
 
     /// An object to hold reusable Link Objects.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub links: Option<BTreeMap<String, ObjectOrReference<Link>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub links: BTreeMap<String, ObjectOrReference<Link>>,
 
     /// An object to hold reusable Callback Objects.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub callbacks: Option<BTreeMap<String, ObjectOrReference<Callback>>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub callbacks: BTreeMap<String, ObjectOrReference<Callback>>,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }
