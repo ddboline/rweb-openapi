@@ -180,7 +180,7 @@ pub struct ServerVariable {
     /// An enumeration of string values to be used if the substitution options are from a limited
     /// set.
     #[serde(rename = "enum", skip_serializing_if = "Vec::is_empty")]
-    pub substitutions_enum: Vec<String>,
+    pub substitutions_enum: Vec<Str>,
     /// An optional description for the server variable. [CommonMark] syntax MAY be used for rich
     /// text representation.
     ///
@@ -268,7 +268,7 @@ pub struct Operation {
     /// A list of tags for API documentation control. Tags can be used for logical grouping of
     /// operations by resources or any other qualifier.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub tags: Vec<String>,
+    pub tags: Vec<Str>,
     /// A short summary of what the operation does.
     #[serde(skip_serializing_if = "str::is_empty")]
     pub summary: Str,
@@ -366,7 +366,7 @@ pub struct Parameter {
     /// values depend on parameter type
     /// may be `header`, `query`, 'path`, `formData`
     #[serde(rename = "in")]
-    pub location: Str,
+    pub location: Location,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -405,7 +405,19 @@ pub struct Parameter {
     pub style: Option<ParameterStyle>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub enum Location {
+    #[serde(rename = "header")]
+    Header,
+    #[serde(rename = "query")]
+    Query,
+    #[serde(rename = "path")]
+    Path,
+    #[serde(rename = "formData")]
+    FormData,
+}
+
+#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ParameterStyle {
     Form,
@@ -443,10 +455,10 @@ pub struct Schema {
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(rename = "enum")]
-    pub enum_values: Vec<String>,
+    pub enum_values: Vec<Str>,
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub required: Vec<String>,
+    pub required: Vec<Str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Box<Schema>>,
@@ -668,7 +680,7 @@ pub enum Link {
         // /// locations (e.g. path.id).
         // parameters: BTreeMap<Str, Any | {expression}>,
         #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-        parameters: BTreeMap<Str, String>,
+        parameters: BTreeMap<Str, Str>,
 
         // FIXME: Implement
         // /// A literal value or
@@ -702,7 +714,7 @@ pub enum Link {
         // /// locations (e.g. path.id).
         // parameters: BTreeMap<Str, Any | {expression}>,
         #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-        parameters: BTreeMap<Str, String>,
+        parameters: BTreeMap<Str, Str>,
 
         // FIXME: Implement
         // /// A literal value or
@@ -891,7 +903,7 @@ pub struct ImplicitFlow {
     pub authorization_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, String>,
+    pub scopes: BTreeMap<Str, Str>,
 }
 
 /// Configuration details for a password OAuth Flow
@@ -903,7 +915,7 @@ pub struct PasswordFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, String>,
+    pub scopes: BTreeMap<Str, Str>,
 }
 
 /// Configuration details for a client credentials OAuth Flow
@@ -915,7 +927,7 @@ pub struct ClientCredentialsFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, String>,
+    pub scopes: BTreeMap<Str, Str>,
 }
 
 /// Configuration details for a authorization code OAuth Flow
@@ -928,7 +940,7 @@ pub struct AuthorizationCodeFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, String>,
+    pub scopes: BTreeMap<Str, Str>,
 }
 
 // TODO: Implement
