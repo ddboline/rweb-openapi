@@ -3,7 +3,6 @@
 use failure::Fail;
 use semver::{SemVerError, Version};
 use serde_json::Error as JsonError;
-use serde_yaml::Error as YamlError;
 use std::io::Error as IoError;
 
 /// errors that openapi functions may return
@@ -11,8 +10,6 @@ use std::io::Error as IoError;
 pub enum Error {
     #[fail(display = "{}", _0)]
     Io(IoError),
-    #[fail(display = "{}", _0)]
-    Yaml(YamlError),
     #[fail(display = "{}", _0)]
     Serialize(JsonError),
     #[fail(display = "{}", _0)]
@@ -24,12 +21,6 @@ pub enum Error {
 impl From<IoError> for Error {
     fn from(e: IoError) -> Self {
         Error::Io(e)
-    }
-}
-
-impl From<YamlError> for Error {
-    fn from(e: YamlError) -> Self {
-        Error::Yaml(e)
     }
 }
 

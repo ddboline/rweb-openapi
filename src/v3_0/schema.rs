@@ -375,7 +375,6 @@ pub struct Parameter {
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
     /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
     pub param_type: Type,
     #[serde(skip_serializing_if = "str::is_empty")]
@@ -423,16 +422,30 @@ pub enum Type {
     File,
 }
 
+/// Just for convenience.
+impl Default for Type {
+    fn default() -> Self {
+        Type::String
+    }
+}
+
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum Location {
-    #[serde(rename = "header")]
-    Header,
     #[serde(rename = "query")]
     Query,
+    #[serde(rename = "header")]
+    Header,
     #[serde(rename = "path")]
     Path,
     #[serde(rename = "formData")]
     FormData,
+}
+
+/// Just for convenience.
+impl Default for Location {
+    fn default() -> Self {
+        Location::Query
+    }
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -464,7 +477,6 @@ pub struct Schema {
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
 
-    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
     pub schema_type: Type,
 
@@ -615,7 +627,6 @@ pub struct Header {
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
     /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
     pub param_type: Type,
     #[serde(skip_serializing_if = "str::is_empty")]
