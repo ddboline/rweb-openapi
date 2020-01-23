@@ -377,7 +377,7 @@ pub struct Parameter {
     /// string, number, boolean, integer, array, file ( only for formData )
     #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
-    pub param_type: Str,
+    pub param_type: Type,
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
     /// A brief description of the parameter. This could contain examples
@@ -403,6 +403,24 @@ pub struct Parameter {
     /// `header` - `simple`; for cookie - `form`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub style: Option<ParameterStyle>,
+}
+
+#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub enum Type {
+    #[serde(rename = "string")]
+    String,
+    #[serde(rename = "number")]
+    Number,
+    #[serde(rename = "integer")]
+    Integer,
+    #[serde(rename = "boolean")]
+    Boolean,
+    #[serde(rename = "array")]
+    Array,
+    #[serde(rename = "object")]
+    Object,
+    #[serde(rename = "file")]
+    File,
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -448,7 +466,7 @@ pub struct Schema {
 
     #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
-    pub schema_type: Str,
+    pub schema_type: Type,
 
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
@@ -599,7 +617,7 @@ pub struct Header {
     /// string, number, boolean, integer, array, file ( only for formData )
     #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(rename = "type")]
-    pub param_type: Str,
+    pub param_type: Type,
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
     /// A brief description of the parameter. This could contain examples
