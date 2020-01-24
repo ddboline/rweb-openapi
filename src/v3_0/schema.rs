@@ -557,6 +557,11 @@ pub struct Schema {
     /// JSON Schema.
     #[serde(rename = "allOf", skip_serializing_if = "Vec::is_empty")]
     pub all_of: Vec<ObjectOrReference<Schema>>,
+
+    /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
+    /// JSON Schema.
+    #[serde(rename = "oneOf", skip_serializing_if = "Vec::is_empty")]
+    pub one_of: Vec<ObjectOrReference<Schema>>,
 }
 
 /// Describes a single response from an API Operation, including design-time, static `links`
