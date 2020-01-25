@@ -360,8 +360,8 @@ pub struct Parameter {
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
     /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(rename = "type")]
-    pub param_type: Type,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub param_type: Option<Type>,
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
     /// A brief description of the parameter. This could contain examples
@@ -405,13 +405,6 @@ pub enum Type {
     Object,
     #[serde(rename = "file")]
     File,
-}
-
-/// Just for convenience.
-impl Default for Type {
-    fn default() -> Self {
-        Type::String
-    }
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -462,8 +455,8 @@ pub struct Schema {
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
 
-    #[serde(rename = "type")]
-    pub schema_type: Type,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub schema_type: Option<Type>,
 
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
@@ -617,8 +610,8 @@ pub struct Header {
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
     /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(rename = "type")]
-    pub param_type: Type,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub param_type: Option<Type>,
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
     /// A brief description of the parameter. This could contain examples

@@ -1,6 +1,6 @@
 [package]
 name = "rweb-openapi"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 description = "Rust bindings for openapi schemas"
 homepage = "https://github.com/kdy1/openapi"
