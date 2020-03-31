@@ -4,8 +4,8 @@ use crate::{
     },
     Str,
 };
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]
@@ -26,39 +26,39 @@ pub enum ObjectOrReference<T> {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Components {
     /// An object to hold reusable Schema Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub schemas: BTreeMap<Str, ObjectOrReference<Schema>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub schemas: IndexMap<Str, ObjectOrReference<Schema>>,
 
     /// An object to hold reusable Response Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub responses: BTreeMap<Str, ObjectOrReference<Response>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub responses: IndexMap<Str, ObjectOrReference<Response>>,
 
     /// An object to hold reusable Parameter Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub parameters: BTreeMap<Str, ObjectOrReference<Parameter>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub parameters: IndexMap<Str, ObjectOrReference<Parameter>>,
 
     /// An object to hold reusable Example
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub examples: BTreeMap<Str, ObjectOrReference<Example>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub examples: IndexMap<Str, ObjectOrReference<Example>>,
 
     /// An object to hold reusable Request Body Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", rename = "requestBodies")]
-    pub request_bodies: BTreeMap<Str, ObjectOrReference<RequestBody>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty", rename = "requestBodies")]
+    pub request_bodies: IndexMap<Str, ObjectOrReference<RequestBody>>,
 
     /// An object to hold reusable Header Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub headers: BTreeMap<Str, ObjectOrReference<Header>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub headers: IndexMap<Str, ObjectOrReference<Header>>,
 
     /// An object to hold reusable Security Scheme Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", rename = "securitySchemes")]
-    pub security_schemes: BTreeMap<Str, ObjectOrReference<SecurityScheme>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty", rename = "securitySchemes")]
+    pub security_schemes: IndexMap<Str, ObjectOrReference<SecurityScheme>>,
 
     /// An object to hold reusable Link Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub links: BTreeMap<Str, ObjectOrReference<Link>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub links: IndexMap<Str, ObjectOrReference<Link>>,
 
     /// An object to hold reusable Callback Objects.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub callbacks: BTreeMap<Str, ObjectOrReference<Callback>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub callbacks: IndexMap<Str, ObjectOrReference<Callback>>,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }

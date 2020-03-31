@@ -4,9 +4,9 @@ use crate::{
     v3_0::components::{Components, ObjectOrReference},
     Str,
 };
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use std::collections::BTreeMap;
 use url;
 use url_serde;
 
@@ -40,7 +40,7 @@ pub struct Spec {
     /// [`Server Object`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#serverObject)
     /// in order to construct the full URL. The Paths MAY be empty, due to
     /// [ACL constraints](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#securityFiltering).
-    pub paths: BTreeMap<Str, PathItem>,
+    pub paths: IndexMap<Str, PathItem>,
 
     /// An element to hold various schemas for the specification.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -150,8 +150,8 @@ pub struct Server {
     pub description: Str,
     /// A map between a variable name and its value. The value is used for substitution in
     /// the server's URL template.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub variables: BTreeMap<Str, ServerVariable>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub variables: IndexMap<Str, ServerVariable>,
 }
 
 /// An object representing a Server Variable for server URL template substitution.
@@ -305,7 +305,7 @@ pub struct Operation {
     /// response for a successful operation call.
     ///
     /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#responsesObject>.
-    pub responses: BTreeMap<Str, Response>,
+    pub responses: IndexMap<Str, Response>,
 
     /// A map of possible out-of band callbacks related to the parent operation. The key is
     /// a unique identifier for the Callback Object. Each value in the map is a
@@ -314,8 +314,8 @@ pub struct Operation {
     /// expected responses. The key value used to identify the callback object is
     /// an expression, evaluated at runtime, that identifies a URL to use for the
     /// callback operation.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub callbacks: BTreeMap<Str, Callback>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub callbacks: IndexMap<Str, Callback>,
 
     /// Declares this operation to be deprecated. Consumers SHOULD refrain from usage
     /// of the declared operation. Default value is `false`.
@@ -471,8 +471,8 @@ pub struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Box<Schema>>,
 
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub properties: BTreeMap<Str, Schema>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub properties: IndexMap<Str, Schema>,
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "readOnly")]
     pub read_only: Option<bool>,
@@ -571,21 +571,21 @@ pub struct Response {
     /// [RFC7230](https://tools.ietf.org/html/rfc7230#page-22) states header names are case
     /// insensitive. If a response header is defined with the name `"Content-Type"`, it SHALL
     /// be ignored.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub headers: BTreeMap<Str, ObjectOrReference<Header>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub headers: IndexMap<Str, ObjectOrReference<Header>>,
 
     /// A map containing descriptions of potential response payloads. The key is a media type
     /// or [media type range](https://tools.ietf.org/html/rfc7231#appendix-D) and the value
     /// describes it. For responses that match multiple keys, only the most specific key is
     /// applicable. e.g. text/plain overrides text/*
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub content: BTreeMap<Str, MediaType>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub content: IndexMap<Str, MediaType>,
 
     /// A map of operations links that can be followed from the response. The key of the map
     /// is a short name for the link, following the naming constraints of the names for
     /// [Component Objects](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject).
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub links: BTreeMap<Str, ObjectOrReference<Link>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub links: IndexMap<Str, ObjectOrReference<Link>>,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }
 
@@ -648,7 +648,7 @@ pub struct RequestBody {
     /// [media type range](https://tools.ietf.org/html/rfc7231#appendix-D) and the
     /// value describes it. For requests that match multiple keys, only the most specific key
     /// is applicable. e.g. text/plain overrides text/*
-    pub content: BTreeMap<Str, MediaType>,
+    pub content: IndexMap<Str, MediaType>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
@@ -690,9 +690,9 @@ pub enum Link {
         // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
         // /// `[{in}.]{name}` for operations that use the same parameter name in different
         // /// locations (e.g. path.id).
-        // parameters: BTreeMap<Str, Any | {expression}>,
-        #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-        parameters: BTreeMap<Str, Str>,
+        // parameters: IndexMap<Str, Any | {expression}>,
+        #[serde(skip_serializing_if = "IndexMap::is_empty")]
+        parameters: IndexMap<Str, Str>,
 
         // FIXME: Implement
         // /// A literal value or
@@ -724,9 +724,9 @@ pub enum Link {
         // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
         // /// `[{in}.]{name}` for operations that use the same parameter name in different
         // /// locations (e.g. path.id).
-        // parameters: BTreeMap<Str, Any | {expression}>,
-        #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-        parameters: BTreeMap<Str, Str>,
+        // parameters: IndexMap<Str, Any | {expression}>,
+        #[serde(skip_serializing_if = "IndexMap::is_empty")]
+        parameters: IndexMap<Str, Str>,
 
         // FIXME: Implement
         // /// A literal value or
@@ -763,8 +763,8 @@ pub struct MediaType {
     /// property name, MUST exist in the schema as a property. The encoding object SHALL
     /// only apply to `requestBody` objects when the media type is `multipart`
     /// or `application/x-www-form-urlencoded`.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub encoding: BTreeMap<Str, Encoding>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub encoding: IndexMap<Str, Encoding>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -780,7 +780,7 @@ pub enum MediaTypeExample {
     /// the `example` field. Furthermore, if referencing a `schema` which contains an
     /// example, the `examples` value SHALL override the example provided by the schema.
     Examples {
-        examples: BTreeMap<Str, ObjectOrReference<Example>>,
+        examples: IndexMap<Str, ObjectOrReference<Example>>,
     },
 }
 
@@ -800,8 +800,8 @@ pub struct Encoding {
     /// `Content-Disposition`.  `Content-Type` is described separately and SHALL be
     /// ignored in this section. This property SHALL be ignored if the request body
     /// media type is not a `multipart`.
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub headers: BTreeMap<Str, ObjectOrReference<Header>>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub headers: IndexMap<Str, ObjectOrReference<Header>>,
 
     /// Describes how a specific property value will be serialized depending on its type.
     /// See [Parameter Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterObject)
@@ -915,7 +915,7 @@ pub struct ImplicitFlow {
     pub authorization_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, Str>,
+    pub scopes: IndexMap<Str, Str>,
 }
 
 /// Configuration details for a password OAuth Flow
@@ -927,7 +927,7 @@ pub struct PasswordFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, Str>,
+    pub scopes: IndexMap<Str, Str>,
 }
 
 /// Configuration details for a client credentials OAuth Flow
@@ -939,7 +939,7 @@ pub struct ClientCredentialsFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, Str>,
+    pub scopes: IndexMap<Str, Str>,
 }
 
 /// Configuration details for a authorization code OAuth Flow
@@ -952,7 +952,7 @@ pub struct AuthorizationCodeFlow {
     token_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_url: Option<Url>,
-    pub scopes: BTreeMap<Str, Str>,
+    pub scopes: IndexMap<Str, Str>,
 }
 
 // TODO: Implement
