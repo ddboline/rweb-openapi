@@ -587,8 +587,6 @@ pub struct Response {
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#headerObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Header {
-    // FIXME: Is the third change properly implemented?
-    // FIXME: Merge `ObjectOrReference<Header>::Reference` and `ParameterOrRef::Reference`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
