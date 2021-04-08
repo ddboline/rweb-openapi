@@ -31,7 +31,6 @@ pub struct Spec {
     /// with a
     /// [url](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#serverUrl)
     /// value of `/`.
-    // FIXME: Provide a default value as specified in documentation instead of `None`.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub servers: Vec<Server>,
 
