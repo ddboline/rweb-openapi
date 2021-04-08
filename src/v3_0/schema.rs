@@ -657,79 +657,57 @@ pub struct RequestBody {
 ///
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#linkObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct Link {
+    #[serde(flatten)]
+    operation: LinkOperation,
+    // FIXME: Implement
+    // /// A map representing parameters to pass to an operation as specified with `operationId`
+    // /// or identified via `operationRef`. The key is the parameter name to be used, whereas
+    // /// the value can be a constant or an expression to be evaluated and passed to the
+    // /// linked operation. The parameter name can be qualified using the
+    // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
+    // /// `[{in}.]{name}` for operations that use the same parameter name in different
+    // /// locations (e.g. path.id).
+    // parameters: IndexMap<Str, Any | {expression}>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    parameters: IndexMap<Str, Str>,
+
+    // FIXME: Implement
+    // /// A literal value or
+    // /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
+    // /// to use as a request body when calling the target operation.
+    // #[serde(rename = "requestBody")]
+    // request_body: Any | {expression}
+    /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
+    /// used for rich text representation.
+    #[serde(skip_serializing_if = "str::is_empty")]
+    description: Str,
+
+    /// A server object to be used by the target operation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    server: Option<Server>,
+    // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
+}
+
+/// The name of an _existing_ resolvable OAS operation, or a relative or absolute reference to an OAS operation.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]
-pub enum Link {
-    /// A relative or absolute reference to an OAS operation. This field is mutually exclusive
-    /// of the `operationId` field, and MUST point to an
-    /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject).
-    /// Relative `operationRef` values MAY be used to locate an existing
-    /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject)
-    /// in the OpenAPI definition.
-    Ref {
-        #[serde(rename = "operationRef")]
-        operation_ref: Str,
-
-        // FIXME: Implement
-        // /// A map representing parameters to pass to an operation as specified with `operationId`
-        // /// or identified via `operationRef`. The key is the parameter name to be used, whereas
-        // /// the value can be a constant or an expression to be evaluated and passed to the
-        // /// linked operation. The parameter name can be qualified using the
-        // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
-        // /// `[{in}.]{name}` for operations that use the same parameter name in different
-        // /// locations (e.g. path.id).
-        // parameters: IndexMap<Str, Any | {expression}>,
-        #[serde(skip_serializing_if = "IndexMap::is_empty")]
-        parameters: IndexMap<Str, Str>,
-
-        // FIXME: Implement
-        // /// A literal value or
-        // /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
-        // /// to use as a request body when calling the target operation.
-        // #[serde(rename = "requestBody")]
-        // request_body: Any | {expression}
-        /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
-        /// used for rich text representation.
-        #[serde(skip_serializing_if = "str::is_empty")]
-        description: Str,
-
-        /// A server object to be used by the target operation.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        server: Option<Server>,
-        // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
-    },
-    /// The name of an _existing_, resolvable OAS operation, as defined with a unique
-    /// `operationId`. This field is mutually exclusive of the `operationRef` field.
+pub enum LinkOperation {
     Id {
+        /// The name of an _existing_, resolvable OAS operation, as defined with a unique
+        /// `operationId`. This field is mutually exclusive of the `operationRef` field.
         #[serde(rename = "operationId")]
         operation_id: Str,
-
-        // FIXME: Implement
-        // /// A map representing parameters to pass to an operation as specified with `operationId`
-        // /// or identified via `operationRef`. The key is the parameter name to be used, whereas
-        // /// the value can be a constant or an expression to be evaluated and passed to the
-        // /// linked operation. The parameter name can be qualified using the
-        // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
-        // /// `[{in}.]{name}` for operations that use the same parameter name in different
-        // /// locations (e.g. path.id).
-        // parameters: IndexMap<Str, Any | {expression}>,
-        #[serde(skip_serializing_if = "IndexMap::is_empty")]
-        parameters: IndexMap<Str, Str>,
-
-        // FIXME: Implement
-        // /// A literal value or
-        // /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
-        // /// to use as a request body when calling the target operation.
-        // #[serde(rename = "requestBody")]
-        // request_body: Any | {expression}
-        /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
-        /// used for rich text representation.
-        #[serde(skip_serializing_if = "str::is_empty")]
-        description: Str,
-
-        /// A server object to be used by the target operation.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        server: Option<Server>,
-        // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
+    },
+    Ref {
+        /// A relative or absolute reference to an OAS operation. This field is mutually exclusive
+        /// of the `operationId` field, and MUST point to an
+        /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject).
+        /// Relative `operationRef` values MAY be used to locate an existing
+        /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject)
+        /// in the OpenAPI definition.
+        #[serde(rename = "operationRef")]
+        operation_ref: Str,
     },
 }
 
