@@ -44,13 +44,13 @@ pub struct Spec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub components: Option<Components>,
 
-    // FIXME: Implement
-    // /// A declaration of which security mechanisms can be used across the API.
-    // /// The list of  values includes alternative security requirement objects that can be used.
-    // /// Only one of the security requirement objects need to be satisfied to authorize a request.
-    // /// Individual operations can override this definition.
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub security: Option<SecurityRequirement>,
+    /// A declaration of which security mechanisms can be used across the API.
+    /// The list of  values includes alternative security requirement objects that can be used.
+    /// Only one of the security requirement objects need to be satisfied to authorize a request.
+    /// Individual operations can override this definition.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub security: Option<SecurityRequirement>,
+
     /// A list of tags used by the specification with additional metadata.
     ///The order of the tags can be used to reflect on their order by the parsing tools.
     /// Not all tags that are used by the
@@ -309,14 +309,15 @@ pub struct Operation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub deprecated: Option<bool>,
 
-    // FIXME: Implement
-    // /// A declaration of which security mechanisms can be used for this operation. The list of
-    // /// values includes alternative security requirement objects that can be used. Only one
-    // /// of the security requirement objects need to be satisfied to authorize a request.
-    // /// This definition overrides any declared top-level
-    // /// [`security`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oasSecurity).
-    // /// To remove a top-level security declaration, an empty array can be used.
-    // pub security: Option<SecurityRequirement>,
+    /// A declaration of which security mechanisms can be used for this operation. The list of
+    /// values includes alternative security requirement objects that can be used. Only one
+    /// of the security requirement objects need to be satisfied to authorize a request.
+    /// This definition overrides any declared top-level
+    /// [`security`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oasSecurity).
+    /// To remove a top-level security declaration, an empty array can be used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub security: Option<SecurityRequirement>,
+
     /// An alternative `server` array to service this operation. If an alternative `server`
     /// object is specified at the Path Item Object or Root level, it will be overridden by
     /// this value.
@@ -947,6 +948,16 @@ pub struct Callback(
     /// A Path Item Object used to define a callback request and expected responses.
     serde_json::Value, // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 );
+
+/// # [Security Requirement Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securityRequirementObject)
+/// Lists the required security schemes to execute this operation.
+/// The name used for each property MUST correspond to a security scheme declared in the [Security Schemes](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#componentsSecuritySchemes) under the [Components Object](#componentsObject).
+///
+/// Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a request to be authorized.
+/// This enables support for scenarios where multiple query parameters or HTTP headers are required to convey security information.
+///
+/// When a list of Security Requirement Objects is defined on the [OpenAPI Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#oasObject) or [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject), only one of the Security Requirement Objects in the list needs to be satisfied to authorize the request.
+pub type SecurityRequirement = IndexMap<Str, Vec<Str>>;
 
 // FIXME: Implement
 // /// Allows configuration of the supported OAuth Flows.
