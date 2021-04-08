@@ -841,20 +841,28 @@ pub struct Example {
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
-    // FIXME: Implement (merge with externalValue as enum)
-    /// Embedded literal example. The `value` field and `externalValue` field are mutually
-    /// exclusive. To represent examples of media types that cannot naturally represented
-    /// in JSON or YAML, use a string value to contain the example, escaping where necessary.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<serde_json::Value>,
-    // FIXME: Implement (merge with value as enum)
-    // /// A URL that points to the literal example. This provides the capability to reference
-    // /// examples that cannot easily be included in JSON or YAML documents. The `value` field
-    // /// and `externalValue` field are mutually exclusive.
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub externalValue: Str,
+    /// Embedded literal example or a URL that points to the literal example.
+    #[serde(skip_serializing_if = "Option::is_none", flatten)]
+    pub value: Option<ExampleValue>,
 
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub enum ExampleValue {
+    Embedded {
+        /// Embedded literal example. The `value` field and `externalValue` field are mutually
+        /// exclusive. To represent examples of media types that cannot naturally represented
+        /// in JSON or YAML, use a string value to contain the example, escaping where necessary.
+        value: serde_json::Value
+    },
+    External {
+        /// A URL that points to the literal example. This provides the capability to reference
+        /// examples that cannot easily be included in JSON or YAML documents. The `value` field
+        /// and `externalValue` field are mutually exclusive.
+        #[serde(rename = "externalValue")]
+        external_value: Str
+    },
 }
 
 /// Defines a security scheme that can be used by the operations. Supported schemes are
