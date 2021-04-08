@@ -815,7 +815,9 @@ pub struct Example {
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 }
 
+/// Embedded literal example or a URL that points to the literal example.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
 pub enum ExampleValue {
     Embedded {
         /// Embedded literal example. The `value` field and `externalValue` field are mutually
