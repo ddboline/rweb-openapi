@@ -660,24 +660,23 @@ pub struct RequestBody {
 pub struct Link {
     #[serde(flatten)]
     operation: LinkOperation,
-    // FIXME: Implement
-    // /// A map representing parameters to pass to an operation as specified with `operationId`
-    // /// or identified via `operationRef`. The key is the parameter name to be used, whereas
-    // /// the value can be a constant or an expression to be evaluated and passed to the
-    // /// linked operation. The parameter name can be qualified using the
-    // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
-    // /// `[{in}.]{name}` for operations that use the same parameter name in different
-    // /// locations (e.g. path.id).
-    // parameters: IndexMap<Str, Any | {expression}>,
-    #[serde(skip_serializing_if = "IndexMap::is_empty")]
-    parameters: IndexMap<Str, Str>,
 
-    // FIXME: Implement
-    // /// A literal value or
-    // /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
-    // /// to use as a request body when calling the target operation.
-    // #[serde(rename = "requestBody")]
-    // request_body: Any | {expression}
+    /// A map representing parameters to pass to an operation as specified with `operationId`
+    /// or identified via `operationRef`. The key is the parameter name to be used, whereas
+    /// the value can be a constant or an expression to be evaluated and passed to the
+    /// linked operation. The parameter name can be qualified using the
+    /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
+    /// `[{in}.]{name}` for operations that use the same parameter name in different
+    /// locations (e.g. path.id).
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    parameters: IndexMap<Str, RuntimeExpressionOrValue>,
+
+    /// A literal value or
+    /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
+    /// to use as a request body when calling the target operation.
+    #[serde(rename = "requestBody", skip_serializing_if = "Option::is_none")]
+    request_body: Option<RuntimeExpressionOrValue>,
+
     /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
     /// used for rich text representation.
     #[serde(skip_serializing_if = "str::is_empty")]
@@ -687,6 +686,14 @@ pub struct Link {
     #[serde(skip_serializing_if = "Option::is_none")]
     server: Option<Server>,
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
+}
+
+/// Runtime expression or literal value. Used for Link `parameters` and `request_body`.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum RuntimeExpressionOrValue {
+    RuntimeExpression(Str),
+    LiteralValue(serde_json::Value),
 }
 
 /// The name of an _existing_ resolvable OAS operation, or a relative or absolute reference to an OAS operation.
