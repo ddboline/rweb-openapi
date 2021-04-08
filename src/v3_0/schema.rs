@@ -325,7 +325,6 @@ pub struct Operation {
     pub servers: Vec<Server>,
 }
 
-// FIXME: Verify against OpenAPI 3.0
 /// Describes a single operation parameter.
 /// A unique parameter is defined by a combination of a
 /// [name](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterName)
@@ -333,48 +332,99 @@ pub struct Operation {
 ///
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct Parameter {
-    /// The name of the parameter.
+    /// The name of the parameter. Parameter names are case sensitive.
     pub name: Str,
-    /// values depend on parameter type
-    /// may be `header`, `query`, 'path`, `formData`
+
+    /// The location of the parameter. Possible values are `"query"`, `"header"`, `"path"` or `"cookie"`.
     #[serde(rename = "in")]
     pub location: Location,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub required: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<Schema>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "uniqueItems")]
-    pub unique_items: Option<bool>,
-    /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub param_type: Option<Type>,
-    #[serde(skip_serializing_if = "str::is_empty")]
-    pub format: Str,
-    /// A brief description of the parameter. This could contain examples
-    /// of use.  GitHub Flavored Markdown is allowed.
+
+    /// A brief description of the parameter. This could contain examples of use. 
+    /// [CommonMark syntax](https://spec.commonmark.org/) MAY be used for rich text representation.
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
-    // collectionFormat: ???
-    // default: ???
-    // maximum ?
-    // exclusiveMaximum ??
-    // minimum ??
-    // exclusiveMinimum ??
-    // maxLength ??
-    // minLength ??
-    // pattern ??
-    // maxItems ??
-    // minItems ??
-    // enum ??
-    // multipleOf ??
-    // allowEmptyValue ( for query / body params )
+
+    /// Determines whether this parameter is mandatory.
+    /// If the [parameter location](#parameterIn) is `"path"`, this property is **REQUIRED** and its value MUST be `true`.
+    /// Otherwise, the property MAY be included and its default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+
+    /// Specifies that a parameter is deprecated and SHOULD be transitioned out of usage.
+    /// Default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deprecated: Option<bool>,
+
+    // /// Sets the ability to pass empty-valued parameters.
+    // /// This is valid only for `query` parameters and allows sending a parameter with an empty value.
+    // /// Default value is `false`.
+    // /// If [`style`](#parameterStyle) is used, and if behavior is `n/a` (cannot be serialized), the value of `allowEmptyValue` SHALL be ignored.
+    // /// Use of this property is NOT RECOMMENDED, as it is likely to be removed in a later revision.
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub allowEmptyValue: Option<bool>,
+
     /// Describes how the parameter value will be serialized depending on the type of the parameter
     /// value. Default values (based on value of in): for `query` - `form`; for `path` - `simple`; for
     /// `header` - `simple`; for cookie - `form`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub style: Option<ParameterStyle>,
+
+    /// When this is true, parameter values of type `array` or `object` generate separate parameters for each value of the array or key-value pair of the map. 
+    /// For other types of parameters this property has no effect. 
+    /// When [`style`] is `form`, the default value is `true`.
+    /// For all other styles, the default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub explode: Option<bool>,
+
+    /// Determines whether the parameter value SHOULD allow reserved characters, as defined by [RFC3986](https://tools.ietf.org/html/rfc3986#section-2.2) `:/?#[]@!$&'()*+,;=` to be included without percent-encoding.
+    /// This property only applies to parameters with an `in` value of `query`.
+    /// The default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_reserved: Option<bool>,
+
+    /// The schema defining the type used for the parameter or a map containing the representations for the parameter.
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub representation: Option<ParameterRepresentation>,
+
+    /// Example(s) of the parameter's potential value
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub example: Option<ParameterExamples>,
+}
+
+/// The schema defining the type used for the parameter or a map containing the representations for the parameter.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum ParameterRepresentation {
+    Simple {
+        /// The schema defining the type used for the parameter.
+        schema: ObjectOrReference<Schema>,
+    },
+    Content {
+        /// A map containing the representations for the parameter. The key is the media type and the value describes it. The map MUST only contain one entry.
+        content: IndexMap<Str, MediaType>,
+    }
+}
+
+/// Example(s) of the parameter's potential value
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum ParameterExamples {
+    One {
+        /// Example of the parameter's potential value.
+        /// The example SHOULD match the specified schema and encoding properties if present.
+        /// The `example` field is mutually exclusive of the `examples` field. Furthermore, if referencing a `schema` that contains an example, the `example` value SHALL _override_ the example provided by the schema.
+        /// To represent examples of media types that cannot naturally be represented in JSON or YAML, a string value can contain the example with escaping where necessary.
+        example: Option<serde_json::Value>,
+    },
+    Multiple {
+        /// Examples of the parameter's potential value.
+        /// Each example SHOULD contain a value in the correct format as specified in the parameter encoding.
+        /// The `examples` field is mutually exclusive of the `example` field.
+        /// Furthermore, if referencing a `schema` that contains an example, the `examples` value SHALL _override_ the example provided by the schema.
+        examples: IndexMap<Str, ObjectOrReference<Example>>,
+    },
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -417,8 +467,13 @@ impl Default for Location {
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ParameterStyle {
+    Matrix,
+    Label,
     Form,
     Simple,
+    SpaceDelimited,
+    PipeDelimited,
+    DeepObject,
 }
 
 // FIXME: Verify against OpenAPI 3.0
