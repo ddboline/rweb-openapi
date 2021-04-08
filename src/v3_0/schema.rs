@@ -175,7 +175,6 @@ pub struct PathItem {
     /// [Path Item Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#pathItemObject).
     /// If there are conflicts between the referenced definition and this Path Item's definition,
     /// the behavior is undefined.
-    // FIXME: Should this ref be moved to an enum?
     #[serde(skip_serializing_if = "str::is_empty", rename = "$ref")]
     pub reference: Str,
 
