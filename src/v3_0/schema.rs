@@ -476,7 +476,6 @@ pub enum ParameterStyle {
     DeepObject,
 }
 
-// FIXME: Verify against OpenAPI 3.0
 /// The Schema Object allows the definition of input and output data types.
 /// These types can be objects, but also primitives and arrays.
 /// This object is an extended subset of the
@@ -488,6 +487,7 @@ pub enum ParameterStyle {
 ///
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#schemaObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct Schema {
     /// [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
     /// path to another definition
@@ -495,21 +495,44 @@ pub struct Schema {
     #[serde(rename = "$ref")]
     pub ref_path: Str,
 
+
+    // This is from 3.0.1; Differs for 3.1
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // The following properties are taken directly from the JSON Schema definition and follow the same specifications:
+    // - multipleOf
+    // - maximum
+    // - exclusiveMaximum
+    // - minimum
+    // - exclusiveMinimum
+    // - maxLength
+    // - minLength
+    // - pattern (This string SHOULD be a valid regular expression, according to the ECMA 262 regular expression dialect)
+    // - maxItems
+    // - minItems
+    // - uniqueItems
+    // - maxProperties
+    // - minProperties
+    // - required
+    // - enum
+    //
+    // The following properties are taken from the JSON Schema definition but their definitions were adjusted to the OpenAPI Specification.
+    // - type - Value MUST be a string. Multiple types via an array are not supported.
+    // - allOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - oneOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - anyOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - not - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema. `items` MUST be present if the `type` is `array`.
+    // - properties - Property definitions MUST be a [Schema Object](#schemaObject) and not a standard JSON Schema (inline or referenced).
+    // - additionalProperties - Value can be boolean or object. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - description - [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
+    // - format - See [Data Type Formats](#dataTypeFormat) for further details. While relying on JSON Schema's defined formats, the OAS offers a few additional predefined formats.
+    // - default - The default value represents what would be assumed by the consumer of the input as the value of the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level. For example, if `type` is `string`, then `default` can be `"foo"` but cannot be `1`.
+
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
 
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub schema_type: Option<Type>,
-
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
-
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[serde(rename = "enum")]
-    pub enum_values: Vec<Str>,
-
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub required: Vec<Str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Box<Schema>>,
@@ -517,8 +540,11 @@ pub struct Schema {
     #[serde(skip_serializing_if = "IndexMap::is_empty")]
     pub properties: IndexMap<Str, Schema>,
 
-    #[serde(skip_serializing_if = "Option::is_none", rename = "readOnly")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub read_only: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub write_only: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nullable: Option<bool>,
@@ -528,10 +554,7 @@ pub struct Schema {
     /// and not a standard JSON Schema.
     ///
     /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#properties>.
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        rename = "additionalProperties"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_properties: Option<ObjectOrReference<Box<Schema>>>,
 
     /// A free-form property to include an example of an instance for this schema.
@@ -547,37 +570,6 @@ pub struct Schema {
     #[serde(skip_serializing_if = "str::is_empty")]
     pub title: Str,
 
-    // The following properties are taken directly from the JSON Schema definition and
-    // follow the same specifications:
-    // multipleOf
-    // maximum
-    // exclusiveMaximum
-    // minimum
-    // exclusiveMinimum
-    // maxLength
-    // minLength
-    // pattern (This string SHOULD be a valid regular expression, according to the ECMA 262 regular expression dialect)
-    // maxItems
-    // minItems
-    // uniqueItems
-    // maxProperties
-    // minProperties
-    // required
-    // enum
-
-    // The following properties are taken from the JSON Schema definition but their
-    // definitions were adjusted to the OpenAPI Specification.
-    // - type - Value MUST be a string. Multiple types via an array are not supported.
-    // - allOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - oneOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - anyOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - not - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema. `items` MUST be present if the `type` is `array`.
-    // - properties - Property definitions MUST be a [Schema Object](#schemaObject) and not a standard JSON Schema (inline or referenced).
-    // - additionalProperties - Value can be boolean or object. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - description - [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    // - format - See [Data Type Formats](#dataTypeFormat) for further details. While relying on JSON Schema's defined formats, the OAS offers a few additional predefined formats.
-    // - default - The default value represents what would be assumed by the consumer of the input as the value of the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level. For example, if `type` is `string`, then `default` can be `"foo"` but cannot be `1`.
     /// The default value represents what would be assumed by the consumer of the input as the value
     /// of the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the
     /// defined type for the Schema Object defined at the same level. For example, if type is
@@ -585,18 +577,75 @@ pub struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<serde_json::Value>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub minimum: Option<serde_json::Value>,
-
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
-    #[serde(rename = "allOf", skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub all_of: Vec<ObjectOrReference<Schema>>,
 
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
-    #[serde(rename = "oneOf", skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub one_of: Vec<ObjectOrReference<Schema>>,
+
+    /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
+    /// JSON Schema.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub any_of: Vec<ObjectOrReference<Schema>>,
+
+
+    // JSON Schema Validation
+    // TODO: fetch up descriptions from https://json-schema.org/draft/2020-12/json-schema-validation.html
+
+    // Any
+    
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub schema_type: Option<Type>,
+    #[serde(rename = "enum", skip_serializing_if = "Vec::is_empty")]
+    pub enum_values: Vec<Str>,
+    #[serde(rename = "const", skip_serializing_if = "Option::is_none")]
+    pub const_value: Option<serde_json::Value>,
+
+    // Numbers
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multiple_of: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minimum: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclusive_minimum: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maximum: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclusive_maximum: Option<serde_json::Value>,
+
+    // Strings
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_length: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_length: Option<usize>,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub pattern: Str,
+
+    // Arrays
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_items: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_items: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unique_items: Option<bool>,
+
+    // Objects
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_properties: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_properties: Option<usize>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub required: Vec<Str>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub dependent_required: IndexMap<Str, Vec<Str>>,
 }
 
 /// Describes a single response from an API Operation, including design-time, static `links`
