@@ -959,13 +959,6 @@ pub struct Callback(
 /// When a list of Security Requirement Objects is defined on the [OpenAPI Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#oasObject) or [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject), only one of the Security Requirement Objects in the list needs to be satisfied to authorize the request.
 pub type SecurityRequirement = IndexMap<Str, Vec<Str>>;
 
-// FIXME: Implement
-// /// Allows configuration of the supported OAuth Flows.
-// /// https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oauthFlowsObject
-// #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
-// pub struct OAuthFlows {
-// }
-
 /// Adds metadata to a single tag that is used by the
 /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject).
 /// It is not mandatory to have a Tag Object per tag defined in the Operation Object instances.
