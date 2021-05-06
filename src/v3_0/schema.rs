@@ -7,8 +7,7 @@ use crate::{
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use url;
-use url_serde;
+use url::Url;
 
 /// top level document
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
@@ -31,7 +30,6 @@ pub struct Spec {
     /// with a
     /// [url](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#serverUrl)
     /// value of `/`.
-    // FIXME: Provide a default value as specified in documentation instead of `None`.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub servers: Vec<Server>,
 
@@ -46,13 +44,13 @@ pub struct Spec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub components: Option<Components>,
 
-    // FIXME: Implement
-    // /// A declaration of which security mechanisms can be used across the API.
-    // /// The list of  values includes alternative security requirement objects that can be used.
-    // /// Only one of the security requirement objects need to be satisfied to authorize a request.
-    // /// Individual operations can override this definition.
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub security: Option<SecurityRequirement>,
+    /// A declaration of which security mechanisms can be used across the API.
+    /// The list of  values includes alternative security requirement objects that can be used.
+    /// Only one of the security requirement objects need to be satisfied to authorize a request.
+    /// Individual operations can override this definition.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub security: Vec<SecurityRequirement>,
+
     /// A list of tags used by the specification with additional metadata.
     ///The order of the tags can be used to reflect on their order by the parsing tools.
     /// Not all tags that are used by the
@@ -93,16 +91,6 @@ pub struct Info {
     /// The license information for the exposed API.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub license: Option<License>,
-}
-
-/// Wraper around `url::Url` to fix serde issue
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Url(#[serde(with = "url_serde")] url::Url);
-
-impl Url {
-    pub fn parse<S: AsRef<str>>(input: S) -> std::result::Result<Url, url::ParseError> {
-        url::Url::parse(input.as_ref()).map(Url)
-    }
 }
 
 /// Contact information for the exposed API.
@@ -187,7 +175,6 @@ pub struct PathItem {
     /// [Path Item Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#pathItemObject).
     /// If there are conflicts between the referenced definition and this Path Item's definition,
     /// the behavior is undefined.
-    // FIXME: Should this ref be moved to an enum?
     #[serde(skip_serializing_if = "str::is_empty", rename = "$ref")]
     pub reference: Str,
 
@@ -322,14 +309,15 @@ pub struct Operation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub deprecated: Option<bool>,
 
-    // FIXME: Implement
-    // /// A declaration of which security mechanisms can be used for this operation. The list of
-    // /// values includes alternative security requirement objects that can be used. Only one
-    // /// of the security requirement objects need to be satisfied to authorize a request.
-    // /// This definition overrides any declared top-level
-    // /// [`security`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oasSecurity).
-    // /// To remove a top-level security declaration, an empty array can be used.
-    // pub security: Option<SecurityRequirement>,
+    /// A declaration of which security mechanisms can be used for this operation. The list of
+    /// values includes alternative security requirement objects that can be used. Only one
+    /// of the security requirement objects need to be satisfied to authorize a request.
+    /// This definition overrides any declared top-level
+    /// [`security`](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oasSecurity).
+    /// To remove a top-level security declaration, an empty array can be used.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub security: Vec<SecurityRequirement>,
+
     /// An alternative `server` array to service this operation. If an alternative `server`
     /// object is specified at the Path Item Object or Root level, it will be overridden by
     /// this value.
@@ -337,7 +325,6 @@ pub struct Operation {
     pub servers: Vec<Server>,
 }
 
-// FIXME: Verify against OpenAPI 3.0
 /// Describes a single operation parameter.
 /// A unique parameter is defined by a combination of a
 /// [name](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterName)
@@ -345,48 +332,99 @@ pub struct Operation {
 ///
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct Parameter {
-    /// The name of the parameter.
+    /// The name of the parameter. Parameter names are case sensitive.
     pub name: Str,
-    /// values depend on parameter type
-    /// may be `header`, `query`, 'path`, `formData`
+
+    /// The location of the parameter. Possible values are `"query"`, `"header"`, `"path"` or `"cookie"`.
     #[serde(rename = "in")]
     pub location: Location,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub required: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<Schema>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "uniqueItems")]
-    pub unique_items: Option<bool>,
-    /// string, number, boolean, integer, array, file ( only for formData )
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub param_type: Option<Type>,
-    #[serde(skip_serializing_if = "str::is_empty")]
-    pub format: Str,
-    /// A brief description of the parameter. This could contain examples
-    /// of use.  GitHub Flavored Markdown is allowed.
+
+    /// A brief description of the parameter. This could contain examples of use. 
+    /// [CommonMark syntax](https://spec.commonmark.org/) MAY be used for rich text representation.
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
-    // collectionFormat: ???
-    // default: ???
-    // maximum ?
-    // exclusiveMaximum ??
-    // minimum ??
-    // exclusiveMinimum ??
-    // maxLength ??
-    // minLength ??
-    // pattern ??
-    // maxItems ??
-    // minItems ??
-    // enum ??
-    // multipleOf ??
-    // allowEmptyValue ( for query / body params )
+
+    /// Determines whether this parameter is mandatory.
+    /// If the [parameter location](#parameterIn) is `"path"`, this property is **REQUIRED** and its value MUST be `true`.
+    /// Otherwise, the property MAY be included and its default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+
+    /// Specifies that a parameter is deprecated and SHOULD be transitioned out of usage.
+    /// Default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deprecated: Option<bool>,
+
+    // /// Sets the ability to pass empty-valued parameters.
+    // /// This is valid only for `query` parameters and allows sending a parameter with an empty value.
+    // /// Default value is `false`.
+    // /// If [`style`](#parameterStyle) is used, and if behavior is `n/a` (cannot be serialized), the value of `allowEmptyValue` SHALL be ignored.
+    // /// Use of this property is NOT RECOMMENDED, as it is likely to be removed in a later revision.
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub allowEmptyValue: Option<bool>,
+
     /// Describes how the parameter value will be serialized depending on the type of the parameter
     /// value. Default values (based on value of in): for `query` - `form`; for `path` - `simple`; for
     /// `header` - `simple`; for cookie - `form`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub style: Option<ParameterStyle>,
+
+    /// When this is true, parameter values of type `array` or `object` generate separate parameters for each value of the array or key-value pair of the map. 
+    /// For other types of parameters this property has no effect. 
+    /// When [`style`] is `form`, the default value is `true`.
+    /// For all other styles, the default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub explode: Option<bool>,
+
+    /// Determines whether the parameter value SHOULD allow reserved characters, as defined by [RFC3986](https://tools.ietf.org/html/rfc3986#section-2.2) `:/?#[]@!$&'()*+,;=` to be included without percent-encoding.
+    /// This property only applies to parameters with an `in` value of `query`.
+    /// The default value is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_reserved: Option<bool>,
+
+    /// The schema defining the type used for the parameter or a map containing the representations for the parameter.
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub representation: Option<ParameterRepresentation>,
+
+    /// Example(s) of the parameter's potential value
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub example: Option<ParameterExamples>,
+}
+
+/// The schema defining the type used for the parameter or a map containing the representations for the parameter.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum ParameterRepresentation {
+    Simple {
+        /// The schema defining the type used for the parameter.
+        schema: ObjectOrReference<Schema>,
+    },
+    Content {
+        /// A map containing the representations for the parameter. The key is the media type and the value describes it. The map MUST only contain one entry.
+        content: IndexMap<Str, MediaType>,
+    }
+}
+
+/// Example(s) of the parameter's potential value
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum ParameterExamples {
+    One {
+        /// Example of the parameter's potential value.
+        /// The example SHOULD match the specified schema and encoding properties if present.
+        /// The `example` field is mutually exclusive of the `examples` field. Furthermore, if referencing a `schema` that contains an example, the `example` value SHALL _override_ the example provided by the schema.
+        /// To represent examples of media types that cannot naturally be represented in JSON or YAML, a string value can contain the example with escaping where necessary.
+        example: Option<serde_json::Value>,
+    },
+    Multiple {
+        /// Examples of the parameter's potential value.
+        /// Each example SHOULD contain a value in the correct format as specified in the parameter encoding.
+        /// The `examples` field is mutually exclusive of the `example` field.
+        /// Furthermore, if referencing a `schema` that contains an example, the `examples` value SHALL _override_ the example provided by the schema.
+        examples: IndexMap<Str, ObjectOrReference<Example>>,
+    },
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -429,11 +467,15 @@ impl Default for Location {
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ParameterStyle {
+    Matrix,
+    Label,
     Form,
     Simple,
+    SpaceDelimited,
+    PipeDelimited,
+    DeepObject,
 }
 
-// FIXME: Verify against OpenAPI 3.0
 /// The Schema Object allows the definition of input and output data types.
 /// These types can be objects, but also primitives and arrays.
 /// This object is an extended subset of the
@@ -445,6 +487,7 @@ pub enum ParameterStyle {
 ///
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#schemaObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct Schema {
     /// [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
     /// path to another definition
@@ -452,21 +495,44 @@ pub struct Schema {
     #[serde(rename = "$ref")]
     pub ref_path: Str,
 
+
+    // This is from 3.0.1; Differs for 3.1
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // The following properties are taken directly from the JSON Schema definition and follow the same specifications:
+    // - multipleOf
+    // - maximum
+    // - exclusiveMaximum
+    // - minimum
+    // - exclusiveMinimum
+    // - maxLength
+    // - minLength
+    // - pattern (This string SHOULD be a valid regular expression, according to the ECMA 262 regular expression dialect)
+    // - maxItems
+    // - minItems
+    // - uniqueItems
+    // - maxProperties
+    // - minProperties
+    // - required
+    // - enum
+    //
+    // The following properties are taken from the JSON Schema definition but their definitions were adjusted to the OpenAPI Specification.
+    // - type - Value MUST be a string. Multiple types via an array are not supported.
+    // - allOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - oneOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - anyOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - not - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema. `items` MUST be present if the `type` is `array`.
+    // - properties - Property definitions MUST be a [Schema Object](#schemaObject) and not a standard JSON Schema (inline or referenced).
+    // - additionalProperties - Value can be boolean or object. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
+    // - description - [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
+    // - format - See [Data Type Formats](#dataTypeFormat) for further details. While relying on JSON Schema's defined formats, the OAS offers a few additional predefined formats.
+    // - default - The default value represents what would be assumed by the consumer of the input as the value of the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level. For example, if `type` is `string`, then `default` can be `"foo"` but cannot be `1`.
+
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
 
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub schema_type: Option<Type>,
-
     #[serde(skip_serializing_if = "str::is_empty")]
     pub format: Str,
-
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[serde(rename = "enum")]
-    pub enum_values: Vec<Str>,
-
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub required: Vec<Str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Box<Schema>>,
@@ -474,22 +540,21 @@ pub struct Schema {
     #[serde(skip_serializing_if = "IndexMap::is_empty")]
     pub properties: IndexMap<Str, Schema>,
 
-    #[serde(skip_serializing_if = "Option::is_none", rename = "readOnly")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub read_only: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub write_only: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nullable: Option<bool>,
 
-    // FIXME: Why can this be a "boolean" (as per the spec)? It doesn't make sense. Here it's not.
     /// Value can be boolean or object. Inline or referenced schema MUST be of a
     /// [Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#schemaObject)
     /// and not a standard JSON Schema.
     ///
     /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#properties>.
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        rename = "additionalProperties"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_properties: Option<ObjectOrReference<Box<Schema>>>,
 
     /// A free-form property to include an example of an instance for this schema.
@@ -505,37 +570,6 @@ pub struct Schema {
     #[serde(skip_serializing_if = "str::is_empty")]
     pub title: Str,
 
-    // The following properties are taken directly from the JSON Schema definition and
-    // follow the same specifications:
-    // multipleOf
-    // maximum
-    // exclusiveMaximum
-    // minimum
-    // exclusiveMinimum
-    // maxLength
-    // minLength
-    // pattern (This string SHOULD be a valid regular expression, according to the ECMA 262 regular expression dialect)
-    // maxItems
-    // minItems
-    // uniqueItems
-    // maxProperties
-    // minProperties
-    // required
-    // enum
-
-    // The following properties are taken from the JSON Schema definition but their
-    // definitions were adjusted to the OpenAPI Specification.
-    // - type - Value MUST be a string. Multiple types via an array are not supported.
-    // - allOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - oneOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - anyOf - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - not - Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema. `items` MUST be present if the `type` is `array`.
-    // - properties - Property definitions MUST be a [Schema Object](#schemaObject) and not a standard JSON Schema (inline or referenced).
-    // - additionalProperties - Value can be boolean or object. Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard JSON Schema.
-    // - description - [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
-    // - format - See [Data Type Formats](#dataTypeFormat) for further details. While relying on JSON Schema's defined formats, the OAS offers a few additional predefined formats.
-    // - default - The default value represents what would be assumed by the consumer of the input as the value of the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level. For example, if `type` is `string`, then `default` can be `"foo"` but cannot be `1`.
     /// The default value represents what would be assumed by the consumer of the input as the value
     /// of the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the
     /// defined type for the Schema Object defined at the same level. For example, if type is
@@ -543,18 +577,75 @@ pub struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<serde_json::Value>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub minimum: Option<serde_json::Value>,
-
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
-    #[serde(rename = "allOf", skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub all_of: Vec<ObjectOrReference<Schema>>,
 
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
-    #[serde(rename = "oneOf", skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub one_of: Vec<ObjectOrReference<Schema>>,
+
+    /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
+    /// JSON Schema.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub any_of: Vec<ObjectOrReference<Schema>>,
+
+
+    // JSON Schema Validation
+    // TODO: fetch up descriptions from https://json-schema.org/draft/2020-12/json-schema-validation.html
+
+    // Any
+    
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub schema_type: Option<Type>,
+    #[serde(rename = "enum", skip_serializing_if = "Vec::is_empty")]
+    pub enum_values: Vec<Str>,
+    #[serde(rename = "const", skip_serializing_if = "Option::is_none")]
+    pub const_value: Option<serde_json::Value>,
+
+    // Numbers
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multiple_of: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minimum: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclusive_minimum: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maximum: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclusive_maximum: Option<serde_json::Value>,
+
+    // Strings
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_length: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_length: Option<usize>,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub pattern: Str,
+
+    // Arrays
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_items: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_items: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unique_items: Option<bool>,
+
+    // Objects
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_properties: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_properties: Option<usize>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub required: Vec<Str>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub dependent_required: IndexMap<Str, Vec<Str>>,
 }
 
 /// Describes a single response from an API Operation, including design-time, static `links`
@@ -600,8 +691,6 @@ pub struct Response {
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#headerObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct Header {
-    // FIXME: Is the third change properly implemented?
-    // FIXME: Merge `ObjectOrReference<Header>::Reference` and `ParameterOrRef::Reference`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -670,79 +759,64 @@ pub struct RequestBody {
 ///
 /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#linkObject>.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct Link {
+    #[serde(flatten)]
+    operation: LinkOperation,
+
+    /// A map representing parameters to pass to an operation as specified with `operationId`
+    /// or identified via `operationRef`. The key is the parameter name to be used, whereas
+    /// the value can be a constant or an expression to be evaluated and passed to the
+    /// linked operation. The parameter name can be qualified using the
+    /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
+    /// `[{in}.]{name}` for operations that use the same parameter name in different
+    /// locations (e.g. path.id).
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    parameters: IndexMap<Str, RuntimeExpressionOrValue>,
+
+    /// A literal value or
+    /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
+    /// to use as a request body when calling the target operation.
+    #[serde(rename = "requestBody", skip_serializing_if = "Option::is_none")]
+    request_body: Option<RuntimeExpressionOrValue>,
+
+    /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
+    /// used for rich text representation.
+    #[serde(skip_serializing_if = "str::is_empty")]
+    description: Str,
+
+    /// A server object to be used by the target operation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    server: Option<Server>,
+    // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
+}
+
+/// Runtime expression or literal value. Used for Link `parameters` and `request_body`.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]
-pub enum Link {
-    /// A relative or absolute reference to an OAS operation. This field is mutually exclusive
-    /// of the `operationId` field, and MUST point to an
-    /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject).
-    /// Relative `operationRef` values MAY be used to locate an existing
-    /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject)
-    /// in the OpenAPI definition.
-    Ref {
-        #[serde(rename = "operationRef")]
-        operation_ref: Str,
+pub enum RuntimeExpressionOrValue {
+    RuntimeExpression(Str),
+    LiteralValue(serde_json::Value),
+}
 
-        // FIXME: Implement
-        // /// A map representing parameters to pass to an operation as specified with `operationId`
-        // /// or identified via `operationRef`. The key is the parameter name to be used, whereas
-        // /// the value can be a constant or an expression to be evaluated and passed to the
-        // /// linked operation. The parameter name can be qualified using the
-        // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
-        // /// `[{in}.]{name}` for operations that use the same parameter name in different
-        // /// locations (e.g. path.id).
-        // parameters: IndexMap<Str, Any | {expression}>,
-        #[serde(skip_serializing_if = "IndexMap::is_empty")]
-        parameters: IndexMap<Str, Str>,
-
-        // FIXME: Implement
-        // /// A literal value or
-        // /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
-        // /// to use as a request body when calling the target operation.
-        // #[serde(rename = "requestBody")]
-        // request_body: Any | {expression}
-        /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
-        /// used for rich text representation.
-        #[serde(skip_serializing_if = "str::is_empty")]
-        description: Str,
-
-        /// A server object to be used by the target operation.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        server: Option<Server>,
-        // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
-    },
-    /// The name of an _existing_, resolvable OAS operation, as defined with a unique
-    /// `operationId`. This field is mutually exclusive of the `operationRef` field.
+/// The name of an _existing_ resolvable OAS operation, or a relative or absolute reference to an OAS operation.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum LinkOperation {
     Id {
+        /// The name of an _existing_, resolvable OAS operation, as defined with a unique
+        /// `operationId`. This field is mutually exclusive of the `operationRef` field.
         #[serde(rename = "operationId")]
         operation_id: Str,
-
-        // FIXME: Implement
-        // /// A map representing parameters to pass to an operation as specified with `operationId`
-        // /// or identified via `operationRef`. The key is the parameter name to be used, whereas
-        // /// the value can be a constant or an expression to be evaluated and passed to the
-        // /// linked operation. The parameter name can be qualified using the
-        // /// [parameter location](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterIn)
-        // /// `[{in}.]{name}` for operations that use the same parameter name in different
-        // /// locations (e.g. path.id).
-        // parameters: IndexMap<Str, Any | {expression}>,
-        #[serde(skip_serializing_if = "IndexMap::is_empty")]
-        parameters: IndexMap<Str, Str>,
-
-        // FIXME: Implement
-        // /// A literal value or
-        // /// [{expression}](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#runtimeExpression)
-        // /// to use as a request body when calling the target operation.
-        // #[serde(rename = "requestBody")]
-        // request_body: Any | {expression}
-        /// A description of the link. [CommonMark syntax](http://spec.commonmark.org/) MAY be
-        /// used for rich text representation.
-        #[serde(skip_serializing_if = "str::is_empty")]
-        description: Str,
-
-        /// A server object to be used by the target operation.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        server: Option<Server>,
-        // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtension
+    },
+    Ref {
+        /// A relative or absolute reference to an OAS operation. This field is mutually exclusive
+        /// of the `operationId` field, and MUST point to an
+        /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject).
+        /// Relative `operationRef` values MAY be used to locate an existing
+        /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject)
+        /// in the OpenAPI definition.
+        #[serde(rename = "operationRef")]
+        operation_ref: Str,
     },
 }
 
@@ -843,20 +917,30 @@ pub struct Example {
     /// [CommonMark syntax](http://spec.commonmark.org/) MAY be used for rich text representation.
     #[serde(skip_serializing_if = "str::is_empty")]
     pub description: Str,
-    // FIXME: Implement (merge with externalValue as enum)
-    /// Embedded literal example. The `value` field and `externalValue` field are mutually
-    /// exclusive. To represent examples of media types that cannot naturally represented
-    /// in JSON or YAML, use a string value to contain the example, escaping where necessary.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<serde_json::Value>,
-    // FIXME: Implement (merge with value as enum)
-    // /// A URL that points to the literal example. This provides the capability to reference
-    // /// examples that cannot easily be included in JSON or YAML documents. The `value` field
-    // /// and `externalValue` field are mutually exclusive.
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub externalValue: Str,
+    /// Embedded literal example or a URL that points to the literal example.
+    #[serde(skip_serializing_if = "Option::is_none", flatten)]
+    pub value: Option<ExampleValue>,
 
     // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
+}
+
+/// Embedded literal example or a URL that points to the literal example.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum ExampleValue {
+    Embedded {
+        /// Embedded literal example. The `value` field and `externalValue` field are mutually
+        /// exclusive. To represent examples of media types that cannot naturally represented
+        /// in JSON or YAML, use a string value to contain the example, escaping where necessary.
+        value: serde_json::Value
+    },
+    External {
+        /// A URL that points to the literal example. This provides the capability to reference
+        /// examples that cannot easily be included in JSON or YAML documents. The `value` field
+        /// and `externalValue` field are mutually exclusive.
+        #[serde(rename = "externalValue")]
+        external_value: Str
+    },
 }
 
 /// Defines a security scheme that can be used by the operations. Supported schemes are
@@ -969,12 +1053,15 @@ pub struct Callback(
     serde_json::Value, // TODO: Add "Specification Extensions" https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#specificationExtensions}
 );
 
-// FIXME: Implement
-// /// Allows configuration of the supported OAuth Flows.
-// /// https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#oauthFlowsObject
-// #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
-// pub struct OAuthFlows {
-// }
+/// # [Security Requirement Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securityRequirementObject)
+/// Lists the required security schemes to execute this operation.
+/// The name used for each property MUST correspond to a security scheme declared in the [Security Schemes](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#componentsSecuritySchemes) under the [Components Object](#componentsObject).
+///
+/// Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a request to be authorized.
+/// This enables support for scenarios where multiple query parameters or HTTP headers are required to convey security information.
+///
+/// When a list of Security Requirement Objects is defined on the [OpenAPI Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#oasObject) or [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject), only one of the Security Requirement Objects in the list needs to be satisfied to authorize the request.
+pub type SecurityRequirement = IndexMap<Str, Vec<Str>>;
 
 /// Adds metadata to a single tag that is used by the
 /// [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#operationObject).
