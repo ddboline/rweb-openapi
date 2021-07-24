@@ -477,23 +477,23 @@ pub enum ParameterStyle {
 }
 
 mod component_ser_as_ref {
-	use super::*;
-	use serde::*;
+    use super::*;
+    use serde::*;
 
-	const PATH_REF_PREFIX: &str = "#/components/schemas/"; 
+    const PATH_REF_PREFIX: &str = "#/components/schemas/"; 
 
-	pub fn serialize<S: Serializer>(component: &Str, ser: S) -> Result<S::Ok, S::Error> {
-		ser.serialize_str(&(PATH_REF_PREFIX.to_string() + component))
-	}
+    pub fn serialize<S: Serializer>(component: &Str, ser: S) -> Result<S::Ok, S::Error> {
+        ser.serialize_str(&(PATH_REF_PREFIX.to_string() + component))
+    }
 
-	pub fn deserialize<'de, D: Deserializer<'de>>(deser: D) -> Result<Str, D::Error> {
-		let s = String::deserialize(deser)?;
-		if let Some(s) = s.strip_prefix(PATH_REF_PREFIX) {
-			Ok(Str::Owned(s.to_string()))
-		} else {
-			Err(de::Error::custom("not a component schema reference path"))
-		}
-	}
+    pub fn deserialize<'de, D: Deserializer<'de>>(deser: D) -> Result<Str, D::Error> {
+        let s = String::deserialize(deser)?;
+        if let Some(s) = s.strip_prefix(PATH_REF_PREFIX) {
+            Ok(Str::Owned(s.to_string()))
+        } else {
+            Err(de::Error::custom("not a component schema reference path"))
+        }
+    }
 }
 
 /// Either a reference to a component schema
@@ -501,16 +501,25 @@ mod component_ser_as_ref {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum ComponentOrInlineSchema {
-	Component {
-		/// Name of the component schema.
-		/// 
-		/// Serialized as [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
-		/// path to the definition within the specification document
-		#[serde(rename = "$ref", serialize_with = "component_ser_as_ref::serialize", deserialize_with = "component_ser_as_ref::deserialize")]
-    	name: Str
-	},
-	Inline(Schema),
-	// Add "ExtRef" variant if support for externally referenced schemas (neither inline nor components) is needed
+    Component {
+        /// Name of the component schema.
+        /// 
+        /// Serialized as [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
+        /// path to the definition within the specification document
+        #[serde(rename = "$ref", serialize_with = "component_ser_as_ref::serialize", deserialize_with = "component_ser_as_ref::deserialize")]
+        name: Str
+    },
+    Inline(Schema),
+    // Add "ExtRef" variant if support for externally referenced schemas (neither inline nor components) is needed
+}
+impl ComponentOrInlineSchema {
+    /// Unwrap inlined
+    pub fn unwrap(&self) -> Option<&Schema> {
+        match self {
+            Self::Inline(s) => Some(s),
+            Self::Component{..} => None,
+        }
+    }
 }
 
 /// The Schema Object allows the definition of input and output data types.
