@@ -507,7 +507,7 @@ pub enum ComponentOrInlineSchema {
 		/// Serialized as [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
 		/// path to the definition within the specification document
 		#[serde(rename = "$ref", serialize_with = "component_ser_as_ref::serialize", deserialize_with = "component_ser_as_ref::deserialize")]
-    	component: Str
+    	name: Str
 	},
 	Inline(Schema),
 	// Add "ExtRef" variant if support for externally referenced schemas (neither inline nor components) is needed
