@@ -1,6 +1,6 @@
 use crate::{
     v3_0::{
-        Callback, Example, Header, Link, Parameter, RequestBody, Response, Schema, SecurityScheme,
+        Callback, Example, Header, Link, Parameter, RequestBody, Response, ComponentOrInlineSchema, SecurityScheme,
     },
     Str,
 };
@@ -27,7 +27,7 @@ pub enum ObjectOrReference<T> {
 pub struct Components {
     /// An object to hold reusable Schema Objects.
     #[serde(skip_serializing_if = "IndexMap::is_empty")]
-    pub schemas: IndexMap<Str, ObjectOrReference<Schema>>,
+    pub schemas: IndexMap<Str, ComponentOrInlineSchema>,
 
     /// An object to hold reusable Response Objects.
     #[serde(skip_serializing_if = "IndexMap::is_empty")]
