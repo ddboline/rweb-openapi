@@ -476,6 +476,43 @@ pub enum ParameterStyle {
     DeepObject,
 }
 
+mod component_ser_as_ref {
+	use super::*;
+	use serde::*;
+
+	const PATH_REF_PREFIX: &str = "#/components/schemas/"; 
+
+	pub fn serialize<S: Serializer>(component: &Str, ser: S) -> Result<S::Ok, S::Error> {
+		ser.serialize_str(&(PATH_REF_PREFIX.to_string() + component))
+	}
+
+	pub fn deserialize<'de, D: Deserializer<'de>>(deser: D) -> Result<Str, D::Error> {
+		let s = String::deserialize(deser)?;
+		if let Some(s) = s.strip_prefix(PATH_REF_PREFIX) {
+			Ok(Str::Owned(s.to_string()))
+		} else {
+			Err(de::Error::custom("not a component schema reference path"))
+		}
+	}
+}
+
+/// Either a reference to a component schema
+/// or an \[inline\] schema itself.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum ComponentOrInlineSchema {
+	Component {
+		/// Name of the component schema.
+		/// 
+		/// Serialized as [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
+		/// path to the definition within the specification document
+		#[serde(rename = "$ref", serialize_with = "component_ser_as_ref::serialize", deserialize_with = "component_ser_as_ref::deserialize")]
+    	component: Str
+	},
+	Inline(Schema),
+	// Add "ExtRef" variant if support for externally referenced schemas (neither inline nor components) is needed
+}
+
 /// The Schema Object allows the definition of input and output data types.
 /// These types can be objects, but also primitives and arrays.
 /// This object is an extended subset of the
