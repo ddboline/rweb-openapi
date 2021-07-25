@@ -399,7 +399,7 @@ pub struct Parameter {
 pub enum ParameterRepresentation {
     Simple {
         /// The schema defining the type used for the parameter.
-        schema: ObjectOrReference<Schema>,
+        schema: ComponentOrInlineSchema,
     },
     Content {
         /// A map containing the representations for the parameter. The key is the media type and the value describes it. The map MUST only contain one entry.
@@ -476,6 +476,52 @@ pub enum ParameterStyle {
     DeepObject,
 }
 
+mod component_ser_as_ref {
+    use super::*;
+    use serde::*;
+
+    const PATH_REF_PREFIX: &str = "#/components/schemas/"; 
+
+    pub fn serialize<S: Serializer>(component: &Str, ser: S) -> Result<S::Ok, S::Error> {
+        ser.serialize_str(&(PATH_REF_PREFIX.to_string() + component))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deser: D) -> Result<Str, D::Error> {
+        let s = String::deserialize(deser)?;
+        if let Some(s) = s.strip_prefix(PATH_REF_PREFIX) {
+            Ok(Str::Owned(s.to_string()))
+        } else {
+            Err(de::Error::custom("not a component schema reference path"))
+        }
+    }
+}
+
+/// Either a reference to a component schema
+/// or an \[inline\] schema itself.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum ComponentOrInlineSchema {
+    Component {
+        /// Name of the component schema.
+        /// 
+        /// Serialized as [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
+        /// path to the definition within the specification document
+        #[serde(rename = "$ref", serialize_with = "component_ser_as_ref::serialize", deserialize_with = "component_ser_as_ref::deserialize")]
+        name: Str
+    },
+    Inline(Schema),
+    // Add "ExtRef" variant if support for externally referenced schemas (neither inline nor components) is needed
+}
+impl ComponentOrInlineSchema {
+    /// Unwrap inlined
+    pub fn unwrap(&self) -> Option<&Schema> {
+        match self {
+            Self::Inline(s) => Some(s),
+            Self::Component{..} => None,
+        }
+    }
+}
+
 /// The Schema Object allows the definition of input and output data types.
 /// These types can be objects, but also primitives and arrays.
 /// This object is an extended subset of the
@@ -489,13 +535,6 @@ pub enum ParameterStyle {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Schema {
-    /// [JSON reference](https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03)
-    /// path to another definition
-    #[serde(skip_serializing_if = "str::is_empty")]
-    #[serde(rename = "$ref")]
-    pub ref_path: Str,
-
-
     // This is from 3.0.1; Differs for 3.1
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     // The following properties are taken directly from the JSON Schema definition and follow the same specifications:
@@ -535,10 +574,10 @@ pub struct Schema {
     pub format: Str,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub items: Option<Box<Schema>>,
+    pub items: Option<Box<ComponentOrInlineSchema>>,
 
     #[serde(skip_serializing_if = "IndexMap::is_empty")]
-    pub properties: IndexMap<Str, Schema>,
+    pub properties: IndexMap<Str, ComponentOrInlineSchema>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub read_only: Option<bool>,
@@ -555,7 +594,7 @@ pub struct Schema {
     ///
     /// See <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#properties>.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub additional_properties: Option<ObjectOrReference<Box<Schema>>>,
+    pub additional_properties: Option<Box<ComponentOrInlineSchema>>,
 
     /// A free-form property to include an example of an instance for this schema.
     /// To represent examples that cannot be naturally represented in JSON or YAML,
@@ -580,17 +619,17 @@ pub struct Schema {
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub all_of: Vec<ObjectOrReference<Schema>>,
+    pub all_of: Vec<ComponentOrInlineSchema>,
 
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub one_of: Vec<ObjectOrReference<Schema>>,
+    pub one_of: Vec<ComponentOrInlineSchema>,
 
     /// Inline or referenced schema MUST be of a [Schema Object](#schemaObject) and not a standard
     /// JSON Schema.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub any_of: Vec<ObjectOrReference<Schema>>,
+    pub any_of: Vec<ComponentOrInlineSchema>,
 
 
     // JSON Schema Validation
@@ -694,7 +733,7 @@ pub struct Header {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<Schema>,
+    pub schema: Option<ComponentOrInlineSchema>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
@@ -827,7 +866,7 @@ pub enum LinkOperation {
 pub struct MediaType {
     /// The schema defining the type used for the request body.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<ObjectOrReference<Schema>>,
+    pub schema: Option<ComponentOrInlineSchema>,
 
     /// Example of the media type.
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
